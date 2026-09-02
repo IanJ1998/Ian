@@ -1,0 +1,272 @@
+# Deep Learning Model for PJM Power Price Forecasting Using Temperature
+
+This project focuses on building a deep learning model to forecast electricity prices in the PJM market using temperature as a key driver. The goal is to estimate how weather conditions influence power prices and improve short-term or day-ahead forecasting accuracy.
+
+## Overview
+
+PJM Interconnection is one of the largest electricity markets in the United States. Power prices in PJM can change sharply due to:
+
+- Extreme temperature conditions
+- Demand spikes during hot or cold weather
+- Generator outages and transmission constraints
+- Seasonal load patterns
+- Fuel costs and market behavior
+
+Because temperature has a strong impact on electricity demand, it is often one of the most informative features in a price forecasting model.
+
+## Objective
+
+Build a deep learning model that predicts PJM power prices using:
+
+- Historical temperature data
+- Historical electricity prices
+- Time-based features (hour, day, week, month, season)
+- Optional demand, load, or weather companion variables
+
+The model can be used for:
+
+- Day-ahead price forecasting
+- Short-term price prediction
+- Scenario analysis for weather shocks
+- Understanding the relationship between weather and power markets
+
+## Why temperature matters in PJM
+
+In the PJM region, temperature affects power demand through heating and cooling use:
+
+- Hot days increase air conditioning load, which can raise electricity prices
+- Cold days increase heating demand and can also drive prices up
+- Temperature volatility creates instability in load and generation balance
+- Weather extremes can cause sharp price spikes
+
+This makes temperature an essential predictor when building a forecasting model for PJM electricity prices.
+
+## Data sources
+
+A typical setup uses the following data:
+
+- PJM market price data
+  - Real-time LMP or day-ahead prices
+  - Hourly or daily resolution
+- Weather data
+  - Regional temperature
+  - Cooling degree days / heating degree days
+  - Humidity, wind, and other climate variables
+- Supplementary variables
+  - Load or demand
+  - Forecasted generation mix
+  - Holidays and calendar effects
+
+Common sources include:
+
+- PJM Data Miner
+- NOAA weather archives
+- EIA and FERC market data
+- Open weather APIs or meteorological datasets
+
+## Recommended modeling approach
+
+A deep learning workflow for this problem usually follows this structure:
+
+1. Collect PJM price and weather data
+2. Merge data on timestamp
+3. Engineer lagged and rolling temperature features
+4. Create time features like hour, weekday, month, and season
+5. Normalize or standardize features
+6. Train a deep learning model
+7. Evaluate against validation and test data
+8. Interpret results and compare with benchmarks
+
+## Core model ideas
+
+Several neural network architectures can work well:
+
+### 1. Feedforward neural network (MLP)
+
+This is the simplest deep learning approach for structured tabular data. It works well when the task is to predict next-hour or next-day price using recent weather and market variables.
+
+Useful features:
+
+- Current temperature
+- Temperature lag 1, 2, 24, 48, 168 hours
+- Rolling temperature average
+- Price lag values
+- Hour-of-day and seasonal indicators
+
+### 2. LSTM / GRU
+
+These recurrent networks are useful when temporal dependencies are important. They can learn patterns from sequences of previous temperature and price information.
+
+Good when:
+
+- You want to model sequential dependence
+- Price is influenced by recent weather history
+- Forecasting multiple steps ahead
+
+### 3. Temporal Fusion Transformer or attention-based models
+
+These models can capture long-range temporal patterns and feature interactions more effectively, especially when many variables are involved.
+
+Good for:
+
+- Multi-variable forecasting
+- Longer lookback windows
+- Complex seasonal and non-linear relationships
+
+## Example feature set
+
+A practical set of predictor variables could include:
+
+- Hourly temperature
+- Temperature trend over previous 6, 12, and 24 hours
+- Rolling 7-day average temperature
+- Cooling degree hours
+- Heating degree hours
+- Day of week
+- Month
+- Holiday flag
+- Previous electricity price values
+- Hourly or daily load demand
+
+The target variable is usually:
+
+- Next hour PJM price
+- Next day average price
+- Day-ahead price at a given time horizon
+
+## Training workflow
+
+A typical deep learning pipeline:
+
+```python
+# Example conceptual workflow
+# 1. Load data
+# 2. Join price and temperature data by timestamp
+# 3. Create lagged temperature and price features
+# 4. Split into train/validation/test sets
+# 5. Standardize numerical variables
+# 6. Train LSTM or MLP model
+# 7. Evaluate using RMSE, MAE, and MAPE
+```
+
+## Suggested evaluation metrics
+
+To evaluate a forecasting model, use metrics such as:
+
+- RMSE (Root Mean Squared Error)
+- MAE (Mean Absolute Error)
+- MAPE (Mean Absolute Percentage Error)
+- Directional accuracy
+- R-squared
+
+For power price forecasting, it is also helpful to assess extreme price periods because the model may perform well on average but fail during spikes.
+
+## Key modeling considerations
+
+- Temperature is not always linear in its effect on price
+- Market structure and policy changes can shift relationships over time
+- Price data is often non-stationary and volatile
+- Extreme weather events can create outliers that require careful handling
+- Feature scaling and windowing are important in deep learning models
+
+## Suggested project structure
+
+```text
+project/
+├── data/
+│   ├── pjm_prices.csv
+│   ├── weather.csv
+│   └── merged_data.csv
+├── notebooks/
+│   ├── exploratory_analysis.ipynb
+│   └── model_training.ipynb
+├── src/
+│   ├── preprocess.py
+│   ├── features.py
+│   ├── model.py
+│   └── train.py
+├── README.md
+├── requirements.txt
+└── results/
+    ├── metrics.csv
+    └── model_predictions.csv
+```
+
+## Recommended Python stack
+
+A common stack for this kind of project includes:
+
+- Python
+- pandas
+- NumPy
+- scikit-learn
+- TensorFlow or PyTorch
+- xarray or netCDF for weather climate datasets
+- matplotlib and seaborn for analysis
+
+Example dependencies:
+
+```bash
+pip install pandas numpy scikit-learn tensorflow matplotlib seaborn
+```
+
+## Example modeling idea
+
+A baseline implementation could use:
+
+- Input: last 24 hours of temperature and price history
+- Hidden layers: 2 to 4 dense layers or an LSTM layer
+- Output: next hour or next day PJM price
+
+This is a useful first model before moving to more advanced sequence models.
+
+## Benchmarking
+
+Always compare the deep learning model against simpler models such as:
+
+- Linear regression
+- Random forest
+- XGBoost
+- ARIMA / SARIMA
+
+This helps confirm whether the deep learning approach adds real value beyond traditional models.
+
+## Best practices
+
+- Use time-based validation to avoid leakage
+- Keep the test period realistic and sequential
+- Understand whether the goal is point forecasting or probabilistic forecasting
+- Handle missing weather and price values carefully
+- Check the model on extreme weather days specifically
+
+## Conclusion
+
+A deep learning model using temperature and PJM power prices can provide meaningful insight into how weather affects electricity markets. The key is to combine weather data, market history, and temporal features in a clean and realistic forecasting pipeline.
+
+This type of model is especially valuable in energy markets where demand and supply are closely linked to temperature conditions and where sharp price movements can happen during extreme events.
+
+## Next steps
+
+Possible next steps for this project:
+
+- Add multiple weather variables beyond temperature
+- Use a multi-step forecasting approach
+- Compare MLP, LSTM, and transformer models
+- Add backtesting with rolling windows
+- Build a dashboard for price and weather scenarios
+
+## References
+
+- PJM market data documentation
+- Electricity market forecasting literature
+- Weather-driven load and price analysis studies
+- Deep learning time series forecasting resources
+
+## Summary
+
+This project combines two major domains:
+
+- Energy economics: PJM power price dynamics
+- Deep learning: sequence modeling and nonlinear forecasting
+
+By incorporating temperature into a forecasting framework, the model captures a major source of variation in electricity price behavior in the PJM market.
