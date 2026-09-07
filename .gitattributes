@@ -1,0 +1,8 @@
+# Set the default behavior to automatically normalize line endings to LF
+* text=auto eol=lf
+
+# Explicitly ensure code files use LF
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
