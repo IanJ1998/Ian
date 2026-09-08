@@ -53,7 +53,7 @@ def fillMissingDates(df : pd.DataFrame , date_col : str = "Date", fill_method :s
     return df_filled
 
 
-def plot_histogram(s: pd.Series, bins: int = 50, ax=None, title: str = ""):
+def plot_histogram(s: pd.Series, bins: int = 100, ax=None, title: str = ""):
     '''
     s : series or a column squeezed into a series 
     bin: no of bins in histogram
@@ -111,7 +111,15 @@ def plot_histogram(s: pd.Series, bins: int = 50, ax=None, title: str = ""):
 
     return ax
 
-def plot_histogram_interactive(fig,s,row,col,title="",bins=50):
+def plot_histogram_interactive(
+    fig,
+    s,
+    row,
+    col,
+    title="",
+    bins=100,
+    quantiles=(0.01, 0.99),
+):
     s = pd.to_numeric(s, errors="coerce").dropna()
 
     if s.empty:
@@ -120,10 +128,19 @@ def plot_histogram_interactive(fig,s,row,col,title="",bins=50):
     mean = s.mean()
     std = s.std(ddof=1)
 
+    # Use the central 98% for visual granularity
+    lower, upper = s.quantile(quantiles)
+
+    bin_size = (upper - lower) / bins
+
     fig.add_trace(
         go.Histogram(
             x=s,
-            nbinsx=bins,
+            xbins=dict(
+                start=lower,
+                end=upper,
+                size=bin_size,
+            ),
             marker_color="skyblue",
             opacity=0.7,
             showlegend=False,
@@ -137,7 +154,6 @@ def plot_histogram_interactive(fig,s,row,col,title="",bins=50):
         line_color="black",
         line_width=2,
         annotation_text=f"Mean: {mean * 100:.2f}%",
-        annotation_position="top left",
         row=row,
         col=col,
     )
@@ -147,9 +163,14 @@ def plot_histogram_interactive(fig,s,row,col,title="",bins=50):
             fig.add_vline(
                 x=value,
                 line_color=color,
-                line_width=1.5,
                 line_dash="dash",
+                line_width=1.5,
                 row=row,
                 col=col,
             )
 
+    fig.update_xaxes(
+        range=[lower, upper],
+        row=row,
+        col=col,
+    )
