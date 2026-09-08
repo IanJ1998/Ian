@@ -1,4 +1,7 @@
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 
 def aligning_dataframes(*dfs):
     for df in dfs:
@@ -107,4 +110,46 @@ def plot_histogram(s: pd.Series, bins: int = 50, ax=None, title: str = ""):
     ax.legend(loc='upper right', fontsize=8)
 
     return ax
+
+def plot_histogram_interactive(fig,s,row,col,title="",bins=50):
+    s = pd.to_numeric(s, errors="coerce").dropna()
+
+    if s.empty:
+        return
+
+    mean = s.mean()
+    std = s.std(ddof=1)
+
+    fig.add_trace(
+        go.Histogram(
+            x=s,
+            nbinsx=bins,
+            marker_color="skyblue",
+            opacity=0.7,
+            showlegend=False,
+        ),
+        row=row,
+        col=col,
+    )
+
+    fig.add_vline(
+        x=mean,
+        line_color="black",
+        line_width=2,
+        annotation_text=f"Mean: {mean * 100:.2f}%",
+        annotation_position="top left",
+        row=row,
+        col=col,
+    )
+
+    for i, color in {1: "orange", 2: "red", 3: "purple"}.items():
+        for value in (mean + i * std, mean - i * std):
+            fig.add_vline(
+                x=value,
+                line_color=color,
+                line_width=1.5,
+                line_dash="dash",
+                row=row,
+                col=col,
+            )
 
