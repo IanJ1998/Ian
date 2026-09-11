@@ -1,0 +1,24 @@
+Key Cross-Asset Observations
+Extreme Volatility Spikes in Natural Gas (NG)
+
+2022 Shock: Natural Gas experienced extreme tail-risk behavior in 2022, with daily relative changes ranging from -1.988 to +1.626 and a log return standard deviation spiking to 0.0516 (nearly double its historical average).
+
+2026 Outlier: In 2026, NG recorded a maximum relative change of 3.542 and a minimum of -1.525, paired with a peak log return standard deviation of 0.0589.
+
+Crude Oil Dynamics (WTI vs. Brent)
+
+Symmetric Shock Profiles: Both WTI and Brent show near-identical standard deviations and extreme tails across all years, notably in 2020 (log return std ~0.0373 Brent vs. ~0.0581 WTI, max log return ~0.191 Brent vs. ~0.320 WTI) and 2022 (relative change max of 16.84 Brent vs. 15.00 WTI).
+
+2026 Turbulence: Both benchmarks exhibited heightened relative change dispersion in 2026, with WTI dropping as low as -11.42 and Brent reaching -8.48.
+
+Agricultural Commodities (Corn & Cattle)
+
+Corn Jump Risk: Corn displays structural point jumps in raw relative changes (e.g., max relative change of +118.75 in 2021 and +100.50 in 2023), whereas log returns remain bounded within a low standard deviation band (0.0097 – 0.0192).
+
+Cattle Stability: Livestock maintains the tightest log return volatility profile among all assets, with standard deviations consistently below 0.015 (peaking at 0.0144 in 2020).
+
+Distributional Characteristics
+
+Zero Median: Median values (50th percentile) for log returns across virtually all assets and years hover exactly at 0.0, highlighting the typical daily noise-to-signal ratio in commodity returns.
+
+Fat Tails & Kurtosis: For almost all assets, the gap between the 75th percentile and the maximum value is vastly larger than the gap between the 25th percentile and the minimum value, illustrating heavy right-tail asymmetry during market shocks.
