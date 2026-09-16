@@ -315,7 +315,7 @@ def getBasicStats(df:pd.DataFrame, cols = ['Percentage_Returns', 'Relative_chang
 
 def plot_modelfitness(df, a_mle, b_mle, loc_mle, scale_mle, title = 'Daily Return Distribution & Fitted Models'):
     # 1. Grid of evaluation points
-    x = np.linspace(returns.min(), returns.max(), 500)
+    x = np.linspace(df.min(), returns.max(), 500)
 
     # 2. Evaluate fitted PDF
     pdf_mle = stats.johnsonsu.pdf(x, a_mle, b_mle, loc=loc_mle, scale=scale_mle)
@@ -326,7 +326,7 @@ def plot_modelfitness(df, a_mle, b_mle, loc_mle, scale_mle, title = 'Daily Retur
     # Empirical Data Histogram
     fig.add_trace(
         go.Histogram(
-            x=returns,
+            x=df,
             histnorm='probability density',
             nbinsx=60,
             name='Empirical Data',
