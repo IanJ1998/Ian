@@ -311,3 +311,56 @@ def getBasicStats(df:pd.DataFrame, cols = ['Percentage_Returns', 'Relative_chang
         _jb = jarque_bera_test(_df, sk, kurt).rename("jarque_bera_test")
         stats_dict[_y] = pd.concat([_df[cols].describe().T, sk, kurt, _jb], axis =1)
     return stats_dict
+
+
+def plot_modelfitness(df, a_mle, b_mle, loc_mle, scale_mle, title = 'Daily Return Distribution & Fitted Models'):
+    # 1. Grid of evaluation points
+    x = np.linspace(df.min(), returns.max(), 500)
+
+    # 2. Evaluate fitted PDF
+    pdf_mle = stats.johnsonsu.pdf(x, a_mle, b_mle, loc=loc_mle, scale=scale_mle)
+
+    # 3. Construct Plotly Figure
+    fig = go.Figure()
+
+    # Empirical Data Histogram
+    fig.add_trace(
+        go.Histogram(
+            x=df,
+            histnorm='probability density',
+            nbinsx=60,
+            name='Empirical Data',
+            marker_color='gray',
+            opacity=0.5
+        )
+    )
+
+    # Johnson SU PDF Curve
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=pdf_mle,
+            mode='lines',
+            name='Johnson SU (MLE)',
+            line=dict(color='firebrick', width=2.5)
+        )
+    )
+
+    # Layout Configuration
+    fig.update_layout(
+        title=title,
+        xaxis_title='Daily Return',
+        yaxis_title='Density',
+        template='plotly_white',
+        hovermode='x unified',
+        width=900,
+        height=500,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=0.01
+        )
+    )
+
+    fig.show()
