@@ -433,6 +433,17 @@ def fittingData_JohnsonSuDistribution(
                 df[col], a=a_raw, b=b_raw, loc=loc_raw, scale=scale_raw
             )
     ks_stat, p_val = stats.kstest(u_cdf, "uniform") #Assuming unifirm
-    
+    if p_val <0.05:
+        print(f'Rejecting null hypothesis since p-value is {p_val}')
+    else:
+        print(f'Null hypothesis could be valid since p value is {p_val},ie, the data could be sampled from Johnson-Su distribution')
+    u_cdf = stats.johnsonsu.cdf(z_returns, a=a_std, b=b_std, loc=loc_std, scale=scale_std)
 
+    # Visual check: Should be flat/uniform
+    plt.hist(u_cdf, bins=30, density=True, edgecolor='black', alpha=0.7)
+    plt.axhline(1.0, color='red', linestyle='--', label='Ideal Uniform(0,1)')
+    plt.title("PIT Uniformity Diagnostic")
+    plt.legend()
+    plt.show()
+        
     return a_std, b_std, loc_std, scale_std
