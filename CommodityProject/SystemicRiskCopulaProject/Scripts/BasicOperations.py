@@ -6,7 +6,18 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from IPython.display import HTML, display
 import plotly.io as pio
+import pickle 
+import os
+from pathlib import Path
+from scipy import stats
+import numpy as np
+import datetime
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 
+# Dates operations
 def aligning_dataframes(*dfs):
     for df in dfs:
         df["Date"] = pd.to_datetime(df["Date"])
@@ -56,7 +67,7 @@ def fillMissingDates(df : pd.DataFrame , date_col : str = "Date", fill_method :s
     df_filled = df_filled.reset_index(names = date_col)
     return df_filled
 
-
+# Plotting
 def plot_histogram(s: pd.Series, bins: int = 100, ax=None, title: str = ""):
     '''
     s : series or a column squeezed into a series 
@@ -292,30 +303,9 @@ def plot_commodity_analysis(dfs: dict, title="Commodity Price and Return Analysi
 
     return fig
 
-# Stats related
-
-def jarque_bera_test(_df, sk, kurt):
-    JB_test = len(_df)/6 * (sk**2 + ((kurt)**2)/4)
-    return JB_test
-
-
-def getBasicStats(df:pd.DataFrame, cols = ['Percentage_Returns', 'Relative_change', 'Log_Returns']):
-    stats_dict = {}
-    for _y in range(start_date.year, end_date.year+1, 1):
-        _ss, _se= pd.Timestamp(_y, 1, 1), pd.Timestamp(_y, 12, 31)
-        _start,_end = max(_ss, pd.Timestamp(start_date)),min(_se, pd.Timestamp(end_date))
-        df["Date"] = pd.to_datetime(df["Date"])
-        _df = df[(df["Date"] >= _start) & (df["Date"] <= _end)].copy()
-        sk = _df[cols].skew().rename("skew")
-        kurt =_df[cols].kurtosis().rename("kurtosis")
-        _jb = jarque_bera_test(_df, sk, kurt).rename("jarque_bera_test")
-        stats_dict[_y] = pd.concat([_df[cols].describe().T, sk, kurt, _jb], axis =1)
-    return stats_dict
-
-
 def plot_modelfitness(df, a_mle, b_mle, loc_mle, scale_mle, title = 'Daily Return Distribution & Fitted Models'):
     # 1. Grid of evaluation points
-    x = np.linspace(df.min(), returns.max(), 500)
+    x = np.linspace(df.min(), df.max(), 500)
 
     # 2. Evaluate fitted PDF
     pdf_mle = stats.johnsonsu.pdf(x, a_mle, b_mle, loc=loc_mle, scale=scale_mle)
@@ -364,3 +354,85 @@ def plot_modelfitness(df, a_mle, b_mle, loc_mle, scale_mle, title = 'Daily Retur
     )
 
     fig.show()
+
+# Stats related
+
+def jarque_bera_test(_df, sk, kurt):
+    JB_test = len(_df)/6 * (sk**2 + ((kurt)**2)/4)
+    return JB_test
+
+def getBasicStats(df:pd.DataFrame, cols = ['Percentage_Returns', 'Relative_change', 'Log_Returns']):
+    stats_dict = {}
+    for _y in range(start_date.year, end_date.year+1, 1):
+        _ss, _se= pd.Timestamp(_y, 1, 1), pd.Timestamp(_y, 12, 31)
+        _start,_end = max(_ss, pd.Timestamp(start_date)),min(_se, pd.Timestamp(end_date))
+        df["Date"] = pd.to_datetime(df["Date"])
+        _df = df[(df["Date"] >= _start) & (df["Date"] <= _end)].copy()
+        sk = _df[cols].skew().rename("skew")
+        kurt =_df[cols].kurtosis().rename("kurtosis")
+        _jb = jarque_bera_test(_df, sk, kurt).rename("jarque_bera_test")
+        stats_dict[_y] = pd.concat([_df[cols].describe().T, sk, kurt, _jb], axis =1)
+    return stats_dict
+
+
+    
+
+def fittingData_JohnsonSuDistribution(
+        df :pd.DataFrame, col : str, standardization_or_not :bool, plot_or_not: bool, name: str = ""
+        ) :
+    '''
+    col: refers to which column needs to fitted/tested
+    standardization_or_not : bool, checked for whether you need to standardize the data or not
+    plot_or_not : Histogram of the fitted model
+
+    '''
+    if standardization_or_not is False:
+        # Calculate empirical sample metrics
+        mu_raw = np.mean(df[col])
+        std_raw = np.std(df[col])
+        # Standardize inputs
+        df[col] = (df[col] - mu_raw) / std_raw
+
+    # Assuming True means already standardized
+
+    # Fit standard Johnson SU
+    a_std, b_std, loc_std, scale_std = stats.johnsonsu.fit(df[col])
+
+    # Calculate empirical moments
+    mu_emp = np.mean(df[col])
+    sigma_emp = np.std(df[col], ddof=1)
+
+    # Standardize returns
+    z_returns = (df[col] - mu_emp) / sigma_emp
+
+    # Compute sample skewness and excess kurtosis
+    skew_emp = stats.skew(z_returns)
+    kurt_emp = stats.kurtosis(z_returns)  # excess kurtosis
+
+    # Provide heuristic initial guesses
+    # Higher kurtosis implies smaller shape parameter 'b' (heavier tails)
+    b_init = np.sqrt(2.0 / np.maximum(kurt_emp, 0.1))
+    a_init = -skew_emp * b_init / 2.0
+
+    a_std, b_std, loc_std, scale_std = stats.johnsonsu.fit(
+        z_returns,
+        a_init,      # initial guess for shape parameter 'a'
+        b_init,      # initial guess for shape parameter 'b'
+        loc=0.0,     # initial guess for location
+        scale=1.0    # initial guess for scale
+    )
+    a_raw, b_raw = a_std, b_std
+    scale_raw = scale_std*sigma_emp
+    loc_raw = loc_std*sigma_emp+mu_emp
+
+    if plot_or_not:
+        plot_modelfitness(df[col], a_raw, b_raw,loc_raw, scale_raw , title = f'{name} Daily {col} standardized return distribution' )
+
+    print("Testing for Kolmogorov-Smirnov test")
+    u_cdf = stats.johnsonsu.cdf(
+                df[col], a=a_raw, b=b_raw, loc=loc_raw, scale=scale_raw
+            )
+    ks_stat, p_val = stats.kstest(u_cdf, "uniform") #Assuming unifirm
+    
+
+    return a_std, b_std, loc_std, scale_std
