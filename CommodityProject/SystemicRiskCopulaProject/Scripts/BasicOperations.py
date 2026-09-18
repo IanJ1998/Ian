@@ -16,6 +16,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+from pandas.tseries.holiday import USFederalHolidayCalendar
+from typing import Literal
 
 # Dates operations
 def aligning_dataframes(*dfs):
@@ -66,6 +68,26 @@ def fillMissingDates(df : pd.DataFrame , date_col : str = "Date", fill_method :s
 
     df_filled = df_filled.reset_index(names = date_col)
     return df_filled
+
+def removeHolidays(df: pd.DataFrame) -> pd.DataFrame:
+    '''
+    US national holidays +
+
+    11 Good-Friday : 2016‑03‑25, 2017‑04‑14, 2018‑03‑30, 2019‑04‑19, 2020‑04‑10, 2021‑04‑02, 2022‑04‑15, 2023‑04‑07, 2024‑03‑29, 2025‑04‑18, 2026‑04‑03
+
+    2018‑12‑05 : National mourning for President George HW Bush
+    '''
+    USholiday = USFederalHolidayCalendar()
+    hols = USholiday.holidays(start=df['Date'].min(), end=df['Date'].max())
+
+    _df = df[(df['Date'].dt.weekday < 5) & ~(df['Date'].isin(hols))]
+    # Remove good friday and 2018-12-05
+    _additionalHolidays = ['2016‑03‑25', '2017‑04‑14', '2018‑03‑30', '2019‑04‑19', '2020‑04‑10', '2021‑04‑02', '2022‑04‑15', '2023‑04‑07', '2024‑03‑29', '2025‑04‑18', '2026‑04‑03']
+
+    additionalHolidays = [ datetime.datetime.strptime(_d.replace('\x2011', '-').replace('‑', '-'), "%Y-%m-%d") for _d in _additionalHolidays]
+    df_cleaned = _df[~(_df['Date'].isin(additionalHolidays))]
+
+    return df_cleaned
 
 # Plotting
 def plot_histogram(s: pd.Series, bins: int = 100, ax=None, title: str = ""):
@@ -373,19 +395,29 @@ def getBasicStats(df:pd.DataFrame, cols = ['Percentage_Returns', 'Relative_chang
         _jb = jarque_bera_test(_df, sk, kurt).rename("jarque_bera_test")
         stats_dict[_y] = pd.concat([_df[cols].describe().T, sk, kurt, _jb], axis =1)
     return stats_dict
-
-
     
-
 def fittingData_JohnsonSuDistribution(
-        df :pd.DataFrame, col : str, standardization_or_not :bool, plot_or_not: bool, name: str = ""
+        df :pd.DataFrame, col : Literal['Log_Returns', 'Relative_change', 'Percentage_Returns'], standardization_or_not :bool, plot_or_not: bool, name: str = ""
         ) :
     '''
-    col: refers to which column needs to fitted/tested
-    standardization_or_not : bool, checked for whether you need to standardize the data or not
-    plot_or_not : Histogram of the fitted model
+    Parameters
+    ----------
+    df:
+        DataFrame containing the return data.
+    col:
+        Name of the numeric return column, for example:
+        "Log_Returns", "Percentage_Returns", or "Relative_change".
+    standardization_or_not:
+        True: the input data is already standardized.
+        False: Need to standardize it before fitting.
+    plot_or_not:
+        Whether to display the fitted distribution plot.
+    name:
+        Optional commodity name used in the plot title.
 
     '''
+    #Remove infinite data
+    df = df[np.isfinite(df[col])]
     if standardization_or_not is False:
         # Calculate empirical sample metrics
         mu_raw = np.mean(df[col])
