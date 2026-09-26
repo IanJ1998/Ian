@@ -11,5 +11,5 @@ How to determine whether a commodity needs GJR?
 > Method 1: Model selection using BIC and AIC
             i. Fix the data into GARCH (1,1) model and measure BIC_i
             ii. Fix data into GJR GARCH (1,1,1) and measure BIC_ii
-            iii. If BIC_i <> BIC_ii, select GARCH and choose GJR GARCH otherwise --> Smaller the better
+            iii. If BIC_i < BIC_ii, select GARCH; Choose GJR GARCH otherwise --> Smaller the better
 > Method 2: 
