@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from pandas.tseries.holiday import USFederalHolidayCalendar
 from typing import Literal
+import arch
 
 # Dates operations
 def aligning_dataframes(*dfs):
@@ -479,3 +480,33 @@ def fittingData_JohnsonSuDistribution(
     plt.show()
         
     return a_std, b_std, loc_std, scale_std
+
+
+def fit_garch_extract_residuals(clean_residuals, commodity_name):
+    """
+    Fits a symmetric GARCH(1,1) with a skewed-t distribution 
+    on zero-mean ARMA residuals and returns the standardized i.i.d. residuals.
+    """
+    print(f"--- Fitting GARCH(1,1) for {commodity_name} ---")
+    
+    # Define standard GARCH(1,1) without the GJR asymmetry term (o=0)
+    model = arch.arch_model(
+        clean_residuals,
+        mean="Zero",      # ARMA already removed the mean
+        vol="GARCH",
+        p=1,              # Lag of squared residuals (ARCH term)
+        o=0,              # No asymmetry (GJR term disabled based on Engle-Ng test)
+        q=1,              # Lag of conditional variance (GARCH term)
+        dist="skewt"      # Accounting for fat tails and skewness
+    )
+    
+    # Fit the model
+    res = model.fit(disp="off")
+    print(res.summary())
+    
+    # Extract conditional volatility and standardized residuals
+    cond_vol = res.conditional_volatility
+    std_resid = clean_residuals / cond_vol
+    
+    return std_resid, res
+
