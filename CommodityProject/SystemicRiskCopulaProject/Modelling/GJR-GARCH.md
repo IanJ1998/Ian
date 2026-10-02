@@ -14,3 +14,10 @@ How to determine whether a commodity needs GJR?
             iii. If BIC_i < BIC_ii, select GARCH; Choose GJR GARCH otherwise --> Smaller the better
 > Method 2: 
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Component                Role in Simulation                                Where does it get correlation?
+
+ARMA ($\mu_t$)        Sets the drift/mean                                  Deterministic; inherits path memory from past joint returns.
+GARCH ($\sigma_t$)    Sets the scale/volatility regime                     Deterministic; spikes simultaneously because past shocks $\eta_{t-1}$ were correlated.
+Copula ($\eta_t$)     The engine of randomness                             Injects joint cross-asset crash dynamics and tail co-dependence at every step.
+
