@@ -13,3 +13,4 @@ How to determine whether a commodity needs GJR?
             ii. Fix data into GJR GARCH (1,1,1) and measure BIC_ii
             iii. If BIC_i < BIC_ii, select GARCH; Choose GJR GARCH otherwise --> Smaller the better
 > Method 2: 
+
